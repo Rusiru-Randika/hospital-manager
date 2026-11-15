@@ -39,30 +39,35 @@ public class DataLoader implements CommandLineRunner {
         if (userRepository.count() == 0) {
             AppUser admin = AppUser.builder()
                     .username("admin")
+                    .fullName("System Administrator")
                     .password(passwordEncoder.encode("admin123"))
                     .role(Role.ADMIN)
                     .build();
 
             AppUser doctor1 = AppUser.builder()
                     .username("dr_smith")
+                    .fullName("Dr. John Smith")
                     .password(passwordEncoder.encode("doctor123"))
                     .role(Role.DOCTOR)
                     .build();
 
             AppUser doctor2 = AppUser.builder()
                     .username("dr_johnson")
+                    .fullName("Dr. Sarah Johnson")
                     .password(passwordEncoder.encode("doctor123"))
                     .role(Role.DOCTOR)
                     .build();
 
             AppUser nurse = AppUser.builder()
                     .username("nurse_mary")
+                    .fullName("Nurse Mary")
                     .password(passwordEncoder.encode("nurse123"))
                     .role(Role.NURSE)
                     .build();
 
             AppUser receptionist = AppUser.builder()
                     .username("receptionist_bob")
+                    .fullName("Bob Miller")
                     .password(passwordEncoder.encode("receptionist123"))
                     .role(Role.RECEPTIONIST)
                     .build();

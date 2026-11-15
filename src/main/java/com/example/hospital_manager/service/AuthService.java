@@ -6,7 +6,9 @@ import com.example.hospital_manager.dto.RegisterRequest;
 import com.example.hospital_manager.dto.UserResponse;
 import com.example.hospital_manager.exception.ApiException;
 import com.example.hospital_manager.model.AppUser;
+import com.example.hospital_manager.model.Patient;
 import com.example.hospital_manager.model.Role;
+import com.example.hospital_manager.repository.PatientRepository;
 import com.example.hospital_manager.repository.UserRepository;
 import com.example.hospital_manager.security.JwtService;
 import org.springframework.http.HttpStatus;
@@ -23,17 +25,20 @@ import java.util.Map;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PatientRepository patientRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     public AuthService(
             UserRepository userRepository,
+            PatientRepository patientRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager authenticationManager
     ) {
         this.userRepository = userRepository;
+        this.patientRepository = patientRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -69,10 +74,27 @@ public class AuthService {
         AppUser user = AppUser.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
+                .fullName(request.fullName())
                 .role(request.role())
                 .build();
 
         AppUser savedUser = userRepository.save(user);
+
+        // If registered role is PATIENT, automatically create corresponding Patient profile
+        if (request.role() == Role.PATIENT) {
+            String patientName = (request.fullName() != null && !request.fullName().isBlank())
+                    ? request.fullName().trim()
+                    : request.username();
+
+            Patient patient = Patient.builder()
+                    .name(patientName)
+                    .phone("+0000000000")
+                    .gender("Unspecified")
+                    .build();
+
+            patientRepository.save(patient);
+        }
+
         return UserResponse.fromEntity(savedUser);
     }
 

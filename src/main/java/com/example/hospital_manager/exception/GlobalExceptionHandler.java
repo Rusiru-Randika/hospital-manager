@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
@@ -43,6 +44,25 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 message.isEmpty() ? "Validation failed" : message,
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpServletRequest request) {
+        String message = "Malformed JSON request or invalid field value";
+        if (ex.getMessage() != null && ex.getMessage().contains("Role")) {
+            message = "Invalid role provided. Valid roles are: ADMIN, DOCTOR, NURSE, RECEPTIONIST, PATIENT";
+        } else if (ex.getMessage() != null && ex.getMessage().contains("AppointmentStatus")) {
+            message = "Invalid appointment status provided. Valid statuses are: SCHEDULED, COMPLETED, CANCELLED";
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message,
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
