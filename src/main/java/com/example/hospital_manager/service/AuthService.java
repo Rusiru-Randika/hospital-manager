@@ -12,8 +12,11 @@ import com.example.hospital_manager.repository.PatientRepository;
 import com.example.hospital_manager.repository.UserRepository;
 import com.example.hospital_manager.security.JwtService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -61,12 +64,25 @@ public class AuthService {
                 token,
                 "Bearer",
                 jwtService.getExpirationTime(),
-                user.getRole(),
-                user.getUsername()
+                user.getUsername(),
+                user.getFullName(),
+                user.getRole()
         );
     }
 
     public UserResponse register(RegisterRequest request) {
+        if (request.role() == Role.NURSE) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            boolean isAdmin = authentication != null
+                    && authentication.isAuthenticated()
+                    && !(authentication instanceof AnonymousAuthenticationToken)
+                    && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+            if (!isAdmin) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Nurses can only be added from an admin account");
+            }
+        }
+
         if (userRepository.existsByUsername(request.username())) {
             throw new ApiException(HttpStatus.CONFLICT, "Username already exists: " + request.username());
         }

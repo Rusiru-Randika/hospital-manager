@@ -30,7 +30,7 @@ public class Appointment {
     private LocalDateTime appointmentTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(30)")
     private AppointmentStatus status;
 
     @Column(columnDefinition = "TEXT")
